@@ -1,6 +1,5 @@
 services:
   backend:
-    image: openclaw-backend:latest
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -24,7 +23,6 @@ services:
       retries: 3
 
   frontend:
-    image: openclaw-frontend:latest
     build:
       context: ../frontend
       dockerfile: Dockerfile
@@ -38,7 +36,6 @@ services:
     restart: unless-stopped
 
   bot:
-    image: openclaw-bot:latest
     build:
       context: ../bot
       dockerfile: Dockerfile
