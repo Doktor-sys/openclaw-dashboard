@@ -1,12 +1,9 @@
-version: "3.8"
-
 services:
   backend:
     image: openclaw-backend:latest
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
-      target: production
     container_name: openclaw-backend
     ports:
       - "3002:3002"
@@ -14,12 +11,9 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - HOST=0.0.0.0
-      - SUPABASE_URL=${SUPABASE_URL:-}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - JWT_SECRET=${JWT_SECRET:-change-this-in-production-min-32-chars}
     volumes:
       - backend-uploads:/app/uploads
-      - backend-data:/app/data
     networks:
       - openclaw-network
     restart: unless-stopped
@@ -32,9 +26,8 @@ services:
   frontend:
     image: openclaw-frontend:latest
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: Dockerfile
-      target: production
     container_name: openclaw-frontend
     ports:
       - "3000:80"
@@ -47,14 +40,12 @@ services:
   bot:
     image: openclaw-bot:latest
     build:
-      context: ./bot
+      context: ../bot
       dockerfile: Dockerfile
     container_name: openclaw-bot
     environment:
       - WS_URL=ws://backend:3002
       - API_URL=http://backend:3002/api
-      - DISCORD_TOKEN=${DISCORD_TOKEN:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     depends_on:
       - backend
     networks:
@@ -67,4 +58,3 @@ networks:
 
 volumes:
   backend-uploads:
-  backend-data:
