@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  backend:
+    image: openclaw-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: openclaw-backend
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - HOST=0.0.0.0
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production-min-32-chars}
+    volumes:
+      - backend-uploads:/app/uploads
+      - backend-data:/app/data
+    networks:
+      - openclaw-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: openclaw-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: openclaw-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://35.195.246.45:3002/api
+    networks:
+      - openclaw-network
+    restart: unless-stopped
+
+  bot:
+    image: openclaw-bot:latest
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: openclaw-bot
+    environment:
+      - WS_URL=ws://backend:3002
+      - API_URL=http://backend:3002/api
+      - DISCORD_TOKEN=${DISCORD_TOKEN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      - backend
+    networks:
+      - openclaw-network
+    restart: unless-stopped
+
+networks:
+  openclaw-network:
+    driver: bridge
+
+volumes:
+  backend-uploads:
+  backend-data:
