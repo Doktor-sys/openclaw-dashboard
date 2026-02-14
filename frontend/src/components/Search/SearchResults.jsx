@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import SearchService from '../services/SearchService';
+import SearchService from '../../services/SearchService';
 
 export default function SearchResults({ query, filters, onResultClick }) {
   const [results, setResults] = useState(null);

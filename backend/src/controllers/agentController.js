@@ -1,124 +1,85 @@
-const supabase = require('../config/supabase');
-
-const mockAgents = [
-  { id: 1, name: 'CodeAgent', status: 'online', type: 'coding', created_at: new Date().toISOString() },
-  { id: 2, name: 'ResearchAgent', status: 'idle', type: 'research', created_at: new Date().toISOString() },
-  { id: 3, name: 'WriteAgent', status: 'offline', type: 'writing', created_at: new Date().toISOString() }
-];
-let agentCounter = 4;
-
-const useMock = () => !supabase;
+const db = require('../config/database');
 
 exports.getAgents = async (req, res) => {
   try {
-    if (useMock()) {
-      return res.json(mockAgents);
-    }
-
-    const { data, error } = await supabase
-      .from('agents')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data);
+    const result = await db.query('SELECT * FROM agents ORDER BY created_at DESC');
+    res.json(result.rows);
   } catch (error) {
+    console.error('Error fetching agents:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.getAgent = async (req, res) => {
   try {
-    if (useMock()) {
-      const agent = mockAgents.find(a => a.id === parseInt(req.params.id));
-      if (agent) {
-        return res.json(agent);
-      }
+    const { id } = req.params;
+    const result = await db.query('SELECT * FROM agents WHERE id = $1', [id]);
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Agent not found' });
     }
-
-    const { data, error } = await supabase
-      .from('agents')
-      .select('*')
-      .eq('id', req.params.id)
-      .single();
-
-    if (error) throw error;
-    res.json(data);
+    res.json(result.rows[0]);
   } catch (error) {
+    console.error('Error fetching agent:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.createAgent = async (req, res) => {
   try {
-    if (useMock()) {
-      const newAgent = {
-        id: agentCounter++,
-        ...req.body,
-        created_at: new Date().toISOString()
-      };
-      mockAgents.push(newAgent);
-      return res.json(newAgent);
-    }
-
-    const { data, error } = await supabase
-      .from('agents')
-      .insert([req.body])
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
+    const { name, type, model, description } = req.body;
+    const result = await db.query(`
+      INSERT INTO agents (name, type, model, description)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `, [name, type || 'general', model || 'minimax-m2.1-free', description || '']);
+    
+    res.status(201).json(result.rows[0]);
   } catch (error) {
+    console.error('Error creating agent:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.updateAgent = async (req, res) => {
   try {
-    if (useMock()) {
-      const index = mockAgents.findIndex(a => a.id === parseInt(req.params.id));
-      if (index !== -1) {
-        mockAgents[index] = { ...mockAgents[index], ...req.body };
-        return res.json(mockAgents[index]);
-      }
+    const { id } = req.params;
+    const { name, type, model, description, status, tasks_completed } = req.body;
+    
+    const result = await db.query(`
+      UPDATE agents 
+      SET name = COALESCE($2, name),
+          type = COALESCE($3, type),
+          model = COALESCE($4, model),
+          description = COALESCE($5, description),
+          status = COALESCE($6, status),
+          tasks_completed = COALESCE($7, tasks_completed),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `, [id, name, type, model, description, status, tasks_completed]);
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Agent not found' });
     }
-
-    const { data, error } = await supabase
-      .from('agents')
-      .update(req.body)
-      .eq('id', req.params.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
+    res.json(result.rows[0]);
   } catch (error) {
+    console.error('Error updating agent:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.deleteAgent = async (req, res) => {
   try {
-    if (useMock()) {
-      const index = mockAgents.findIndex(a => a.id === parseInt(req.params.id));
-      if (index !== -1) {
-        mockAgents.splice(index, 1);
-        return res.json({ message: 'Agent deleted' });
-      }
+    const { id } = req.params;
+    const result = await db.query('DELETE FROM agents WHERE id = $1 RETURNING id', [id]);
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Agent not found' });
     }
-
-    const { error } = await supabase
-      .from('agents')
-      .delete()
-      .eq('id', req.params.id);
-
-    if (error) throw error;
     res.json({ message: 'Agent deleted' });
   } catch (error) {
+    console.error('Error deleting agent:', error);
     res.status(500).json({ error: error.message });
   }
 };

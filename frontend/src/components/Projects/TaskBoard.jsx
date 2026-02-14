@@ -23,7 +23,7 @@ export default function TaskBoard() {
   const loadData = async () => {
     try {
       const [tasksData, projectsData] = await Promise.all([
-        fetch('http://localhost:3002/api/projects/tasks').then(r => r.json()),
+        fetch('http://localhost:3002/api/tasks').then(r => r.json()),
         fetch('http://localhost:3002/api/projects').then(r => r.json())
       ])
       setTasks(tasksData)
@@ -39,13 +39,13 @@ export default function TaskBoard() {
     e.preventDefault()
     try {
       if (editingTask) {
-        await fetch(`http://localhost:3002/api/projects/tasks/${editingTask.id}`, {
+        await fetch(`http://localhost:3002/api/tasks/${editingTask.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         })
       } else {
-        await fetch('http://localhost:3002/api/projects/tasks', {
+        await fetch('http://localhost:3002/api/tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
@@ -81,7 +81,7 @@ export default function TaskBoard() {
   const handleDelete = async (id) => {
     if (window.confirm('Möchten Sie diese Aufgabe wirklich löschen?')) {
       try {
-        await fetch(`http://localhost:3002/api/projects/tasks/${id}`, {
+        await fetch(`http://localhost:3002/api/tasks/${id}`, {
           method: 'DELETE'
         })
         loadData()
@@ -100,7 +100,7 @@ export default function TaskBoard() {
     const taskId = parseInt(e.dataTransfer.getData('taskId'))
     
     try {
-      await fetch(`http://localhost:3002/api/projects/tasks/${taskId}`, {
+      await fetch(`http://localhost:3002/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -146,7 +146,7 @@ export default function TaskBoard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -159,7 +159,7 @@ export default function TaskBoard() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Alle</option>
             <option value="todo">Offen</option>
@@ -178,7 +178,7 @@ export default function TaskBoard() {
               })
               setShowModal(true)
             }}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             + Neue Aufgabe
           </button>
@@ -221,7 +221,7 @@ export default function TaskBoard() {
                     <div className="flex justify-between items-center text-xs text-gray-500">
                       <span>{projects.find(p => p.id === task.project_id)?.name || 'Kein Projekt'}</span>
                       <div className="flex gap-2">
-                        <button onClick={() => handleEdit(task)} className="text-primary-600 hover:underline">Bearbeiten</button>
+                        <button onClick={() => handleEdit(task)} className="text-blue-600 hover:underline">Bearbeiten</button>
                         <button onClick={() => handleDelete(task.id)} className="text-red-600 hover:underline">Löschen</button>
                       </div>
                     </div>
@@ -245,7 +245,7 @@ export default function TaskBoard() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -254,7 +254,7 @@ export default function TaskBoard() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                 />
               </div>
@@ -263,7 +263,7 @@ export default function TaskBoard() {
                 <select
                   value={formData.project_id}
                   onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Kein Projekt</option>
                   {projects.map(p => (
@@ -277,7 +277,7 @@ export default function TaskBoard() {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="todo">Offen</option>
                     <option value="in_progress">In Arbeit</option>
@@ -289,7 +289,7 @@ export default function TaskBoard() {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">Niedrig</option>
                     <option value="medium">Mittel</option>
@@ -307,7 +307,7 @@ export default function TaskBoard() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   {editingTask ? 'Speichern' : 'Erstellen'}
                 </button>

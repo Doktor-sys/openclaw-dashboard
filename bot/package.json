@@ -2,10 +2,10 @@
   "name": "openclaw-bot",
   "version": "1.0.0",
   "description": "OpenClaw Bot for Dashboard integration",
-  "main": "index.js",
+  "main": "bot-service.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "start": "node bot-service.js",
+    "dev": "node bot-service.js"
   },
   "dependencies": {
     "ws": "^8.14.2",

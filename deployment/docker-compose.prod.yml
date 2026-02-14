@@ -1,7 +1,7 @@
 services:
   backend:
     build:
-      context: ../backend
+      context: C:/openclaw/backend
       dockerfile: Dockerfile
     container_name: openclaw-backend
     ports:
@@ -24,7 +24,7 @@ services:
 
   frontend:
     build:
-      context: ../frontend
+      context: C:/openclaw/frontend
       dockerfile: Dockerfile
     container_name: openclaw-frontend
     ports:
@@ -37,7 +37,7 @@ services:
 
   bot:
     build:
-      context: ../bot
+      context: C:/openclaw/bot
       dockerfile: Dockerfile
     container_name: openclaw-bot
     environment:

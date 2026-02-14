@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #2563eb; margin-bottom: 10px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label { color: #6b7280; font-size: 14px; margin-bottom: 8px; }
+        .stat-value { font-size: 36px; font-weight: bold; }
+        .stat-value.blue { color: #2563eb; }
+        .stat-value.yellow { color: #f59e0b; }
+        .stat-value.green { color: #10b981; }
+        .projects-list {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .projects-list h2 { margin-bottom: 15px; }
+        .project-item {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+        }
+        .project-item:last-child { border-bottom: none; }
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { text-align: center; padding: 40px; color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OpenClaw Dashboard</h1>
+        <p>Projekt- und Aufgabenmanagement</p>
+    </div>
+
+    <div id="stats" class="stats-grid">
+        <div class="loading">Lade Daten...</div>
+    </div>
+
+    <div id="projects" class="projects-list">
+        <div class="loading">Lade Projekte...</div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                // Fetch Projekte
+                const projectsResponse = await fetch('/api/projects');
+                if (!projectsResponse.ok) throw new Error('API Fehler');
+                const projects = await projectsResponse.json();
+                
+                // Fetch Aufgaben
+                const tasksResponse = await fetch('/api/tasks');
+                if (!tasksResponse.ok) throw new Error('API Fehler');
+                const tasks = await tasksResponse.json();
+                
+                // Statistiken berechnen
+                const activeProjects = projects.filter(p => p.status === 'active').length;
+                const openTasks = tasks.filter(t => t.status === 'todo').length;
+                const completedTasks = tasks.filter(t => t.status === 'done').length;
+                
+                // Stats anzeigen
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Aktive Projekte</div>
+                        <div class="stat-value blue">${activeProjects}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Offene Aufgaben</div>
+                        <div class="stat-value yellow">${openTasks}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Erledigte Aufgaben</div>
+                        <div class="stat-value green">${completedTasks}</div>
+                    </div>
+                `;
+                
+                // Projekte anzeigen
+                document.getElementById('projects').innerHTML = `
+                    <h2>Projekte (${projects.length})</h2>
+                    ${projects.map(p => `
+                        <div class="project-item">
+                            <div>
+                                <strong>${p.name}</strong>
+                                <div style="color: #6b7280; font-size: 14px;">${p.description}</div>
+                            </div>
+                            <div style="color: ${p.status === 'active' ? '#10b981' : '#6b7280'};">
+                                ${p.status === 'active' ? 'Aktiv' : 'Abgeschlossen'}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+                
+            } catch (error) {
+                console.error('Fehler:', error);
+                document.getElementById('stats').innerHTML = `
+                    <div class="error" style="grid-column: span 3;">
+                        Fehler beim Laden: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Sofort laden
+        loadDashboard();
+        
+        // Alle 30 Sekunden aktualisieren
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ const navItems = [
   { path: '/', label: 'Übersicht', icon: '📊' },
   { path: '/projects', label: 'Projekte', icon: '📁' },
   { path: '/tasks', label: 'Aufgaben', icon: '✅' },
+  { path: '/kanban', label: 'Kanban', icon: '📋' },
   { path: '/files', label: 'Dateien', icon: '📤' },
   { path: '/monitoring', label: 'Monitoring', icon: '📈' },
   { path: '/search', label: 'Suche', icon: '🔍' },

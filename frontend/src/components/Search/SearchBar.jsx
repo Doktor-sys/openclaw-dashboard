@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import SearchService from '../services/SearchService';
+import SearchService from '../../services/SearchService';
 
 export default function SearchBar({ onSearch, placeholder = 'Suche...', showFilters = true }) {
   const [query, setQuery] = useState('');

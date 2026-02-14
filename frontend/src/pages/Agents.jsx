@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AVAILABLE_MODELS, DEFAULT_AGENTS } from '../../constants/models';
+import { AVAILABLE_MODELS, DEFAULT_AGENTS } from '../constants/models';
 
 export default function Agents() {
   const [agents, setAgents] = useState([]);
