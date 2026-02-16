@@ -1,13 +1,14 @@
 const db = require('../config/database');
 
-const COST_PER_1K_TOKENS = {
-  'openai-gpt4': { input: 0.015, output: 0.075 },
-  'openai-gpt35': { input: 0.0005, output: 0.002 },
-  'anthropic': { input: 0.003, output: 0.015 },
-  'kimi': { input: 0.0, output: 0.0 },
-  'weather': { input: 0.0, output: 0.0 },
-  'github': { input: 0.0, output: 0.0 },
-  'newsletter': { input: 0.0, output: 0.0 }
+const COST_PER_CALL = {
+  '/api/code': 0.001,
+  '/api/agents': 0.0005,
+  '/api/newsletter': 0.001,
+  '/api/github': 0.0005,
+  '/api/weather': 0,
+  '/api/projects': 0,
+  '/api/tasks': 0,
+  '/api/context': 0
 };
 
 class AnalyticsController {
@@ -15,8 +16,8 @@ class AnalyticsController {
     const startTime = Date.now();
     const endpoint = req.path;
     
-    // Skip tracking analytics and health endpoints
-    if (endpoint.startsWith('/analytics') || endpoint === '/health') {
+    // Skip tracking analytics endpoints
+    if (endpoint.startsWith('/analytics')) {
       return next();
     }
     
@@ -26,7 +27,7 @@ class AnalyticsController {
       const statusCode = res.statusCode;
       
       if (statusCode >= 200 && statusCode < 300) {
-        analyticsController.logCall(req.user?.id || 0, endpoint, duration, statusCode, req.body?.model || 'unknown').catch(console.error);
+        analyticsController.log(endpoint, duration, statusCode).catch(console.error);
       }
       
       originalSend.call(this, data);
@@ -35,15 +36,14 @@ class AnalyticsController {
     next();
   }
 
-  async logCall(userId, endpoint, duration, statusCode, model = 'unknown') {
+  async log(endpoint, duration, statusCode) {
     try {
       await db.query(
-        `INSERT INTO analytics (user_id, endpoint, duration_ms, status_code, model) 
-         VALUES ($1, $2, $3, $4, $5)`,
-        [userId, endpoint, duration, statusCode, model]
+        `INSERT INTO analytics (endpoint, duration_ms, status_code) VALUES ($1, $2, $3)`,
+        [endpoint, duration, statusCode]
       );
     } catch (err) {
-      console.error('Error logging analytics:', err.message);
+      console.error('Analytics log error:', err.message);
     }
   }
 
@@ -60,6 +60,10 @@ class AnalyticsController {
         `SELECT COUNT(*) as count FROM analytics WHERE created_at > ${dateFilter}`
       );
 
+      const avgResult = await db.query(
+        `SELECT AVG(duration_ms) as avg FROM analytics WHERE created_at > ${dateFilter}`
+      );
+
       const callsByEndpoint = await db.query(
         `SELECT endpoint, COUNT(*) as count, AVG(duration_ms) as avg_duration 
          FROM analytics WHERE created_at > ${dateFilter} 
@@ -72,71 +76,30 @@ class AnalyticsController {
          GROUP BY DATE(created_at) ORDER BY date`
       );
 
-      const recentCalls = await db.query(
-        `SELECT * FROM analytics ORDER BY created_at DESC LIMIT 20`
-      );
-
-      const costEstimate = this.estimateCost(callsByEndpoint.rows);
+      // Calculate cost
+      let totalCost = 0;
+      const breakdown = {};
+      for (const row of callsByEndpoint.rows) {
+        const cost = COST_PER_CALL[row.endpoint] || 0.0001;
+        const c = parseInt(row.count) * cost;
+        totalCost += c;
+        breakdown[row.endpoint] = c;
+      }
 
       res.json({
         success: true,
         period,
         summary: {
           totalCalls: parseInt(totalCalls.rows[0].count),
-          avgDuration: callsByEndpoint.rows.reduce((acc, r) => acc + parseFloat(r.avg_duration || 0), 0) / (callsByEndpoint.rows.length || 1)
+          avgDuration: Math.round(avgResult.rows[0].avg || 0)
         },
         byEndpoint: callsByEndpoint.rows,
         byDay: callsByDay.rows,
-        recentCalls: recentCalls.rows,
-        costEstimate
+        costEstimate: { total: totalCost, breakdown }
       });
     } catch (err) {
       console.error('Analytics error:', err);
       res.status(500).json({ success: false, error: err.message });
-    }
-  }
-
-  estimateCost(callsByEndpoint) {
-    let totalCost = 0;
-    const breakdown = {};
-
-    for (const call of callsByEndpoint) {
-      const endpoint = call.endpoint;
-      let provider = 'other';
-      
-      if (endpoint.includes('code') || endpoint.includes('agent')) provider = 'openai-gpt4';
-      if (endpoint.includes('kimi')) provider = 'kimi';
-      if (endpoint.includes('anthropic')) provider = 'anthropic';
-      if (endpoint.includes('weather')) provider = 'weather';
-      if (endpoint.includes('github')) provider = 'github';
-      if (endpoint.includes('newsletter')) provider = 'newsletter';
-
-      const tokensEstimate = parseInt(call.count) * 1000;
-      const costs = COST_PER_1K_TOKENS[provider] || { input: 0.001, output: 0.002 };
-      const cost = (tokensEstimate / 1000) * (costs.input + costs.output);
-      
-      totalCost += cost;
-      breakdown[provider] = (breakdown[provider] || 0) + cost;
-    }
-
-    return { total: totalCost, breakdown };
-  }
-
-  async resetAnalytics(req, res) {
-    try {
-      const token = req.headers.authorization?.split(' ')[1];
-      const jwt = require('jsonwebtoken');
-      const JWT_SECRET = process.env.JWT_SECRET || 'demo-secret-for-development-only';
-      const decoded = jwt.verify(token, JWT_SECRET);
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).json({ error: 'Nur Administratoren können Analytics zurücksetzen' });
-      }
-
-      await db.query('DELETE FROM analytics');
-      res.json({ success: true, message: 'Analytics zurückgesetzt' });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
     }
   }
 }

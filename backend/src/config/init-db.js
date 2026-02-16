@@ -104,6 +104,16 @@ const initializeDatabase = async () => {
       );
     `);
 
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS analytics (
+        id SERIAL PRIMARY KEY,
+        endpoint VARCHAR(255) NOT NULL,
+        duration_ms INTEGER DEFAULT 0,
+        status_code INTEGER DEFAULT 200,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Create indexes for better performance
     await db.query('CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);');
     await db.query('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);');

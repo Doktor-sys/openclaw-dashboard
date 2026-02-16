@@ -983,6 +983,11 @@
             <div class="nav-section">
                 <div class="nav-section-title">System</div>
                 
+                <div class="nav-item" onclick="showSection('analytics', this)">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </div>
+                
                 <div class="nav-item" onclick="showSection('settings', this)">
                     <i class="fas fa-sliders-h"></i>
                     <span>Einstellungen</span>
@@ -1077,6 +1082,9 @@
                         break;
                     case 'context':
                         renderContext();
+                        break;
+                    case 'analytics':
+                        renderAnalytics();
                         break;
                     case 'settings':
                         renderSettings();
@@ -3810,6 +3818,68 @@ Ihr OpenClaw Team`;
                 const apiStatus = document.getElementById('apiStatus');
                 apiStatus.innerHTML = '✗ Fehler';
                 apiStatus.style.color = '#dc2626';
+            }
+        }
+
+        // Render Analytics
+        async function renderAnalytics() {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="page-header">
+                    <h2>📊 Analytics & Kosten</h2>
+                    <p>API-Nutzung und geschätzte Kosten.</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-sm" onclick="loadAnalytics('24h')">24h</button>
+                    <button class="btn btn-sm" onclick="loadAnalytics('7d')">7 Tage</button>
+                    <button class="btn btn-sm" onclick="loadAnalytics('30d')">30 Tage</button>
+                </div>
+                <div id="analyticsContent">
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Lade...
+                    </div>
+                </div>
+            `;
+            loadAnalytics('7d');
+        }
+
+        async function loadAnalytics(period) {
+            try {
+                const res = await fetch(`${API_URL}/analytics/stats?period=${period}`);
+                const data = await res.json();
+                
+                if (!data.success) throw new Error(data.error);
+                
+                const cost = data.costEstimate;
+                document.getElementById('analyticsContent').innerHTML = `
+                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-card">
+                            <div class="stat-value">${data.summary.totalCalls}</div>
+                            <div class="stat-label">API Aufrufe</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">$${cost.total.toFixed(4)}</div>
+                            <div class="stat-label">Geschätzte Kosten</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${data.summary.avgDuration}ms</div>
+                            <div class="stat-label">Durchschn. Dauer</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header"><div class="card-title">Top Endpunkte</div></div>
+                        <div class="card-body">
+                            ${data.byEndpoint.map(e => `
+                                <div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border-color);">
+                                    <code>${e.endpoint}</code>
+                                    <span>${e.count} Aufrufe</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('analyticsContent').innerHTML = `<div style="color:red;">Fehler: ${err.message}</div>`;
             }
         }
 
