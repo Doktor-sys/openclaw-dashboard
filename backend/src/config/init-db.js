@@ -11,9 +11,6 @@ const initializeDatabase = async () => {
         username VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        role VARCHAR(20) DEFAULT 'user',
-        avatar VARCHAR(500),
-        is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -100,18 +97,6 @@ const initializeDatabase = async () => {
         type VARCHAR(100) NOT NULL,
         description TEXT,
         metadata JSONB DEFAULT '{}',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS analytics (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER,
-        endpoint VARCHAR(255) NOT NULL,
-        duration_ms INTEGER DEFAULT 0,
-        status_code INTEGER DEFAULT 200,
-        model VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

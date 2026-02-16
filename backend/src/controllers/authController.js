@@ -1,6 +1,5 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'demo-secret-for-development-only';
 
@@ -13,29 +12,21 @@ class AuthController {
         return res.status(400).json({ error: 'Benutzername und Passwort erforderlich' });
       }
 
-      const result = await db.query(
-        'SELECT * FROM users WHERE username = $1 OR email = $1',
-        [username]
-      );
-
-      const user = result.rows[0];
+      const users = await this.getUsers();
+      const user = users.find(u => u.username === username);
 
       if (!user) {
         return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
       }
 
-      if (!user.is_active) {
-        return res.status(401).json({ error: 'Benutzerkonto ist deaktiviert' });
-      }
-
-      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      const isValidPassword = await bcrypt.compare(password, user.password);
 
       if (!isValidPassword) {
         return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
       }
 
       const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
+        { id: user.id, username: user.username },
         JWT_SECRET,
         { expiresIn: '24h' }
       );
@@ -46,13 +37,10 @@ class AuthController {
           id: user.id,
           username: user.username,
           email: user.email,
-          role: user.role,
-          avatar: user.avatar,
-          createdAt: user.created_at
+          createdAt: user.createdAt
         }
       });
     } catch (error) {
-      console.error('Login error:', error);
       res.status(500).json({ error: error.message });
     }
   }
@@ -69,33 +57,30 @@ class AuthController {
         return res.status(400).json({ error: 'Passwort muss mindestens 6 Zeichen haben' });
       }
 
-      const existingCheck = await db.query(
-        'SELECT id FROM users WHERE username = $1 OR email = $2',
-        [username, email]
+      const users = await this.getUsers();
+      const existingUser = users.find(u => 
+        u.username === username || u.email === email
       );
 
-      if (existingCheck.rows.length > 0) {
+      if (existingUser) {
         return res.status(400).json({ error: 'Benutzername oder E-Mail bereits vergeben' });
       }
 
-      // Check if this is the first user - make them admin
-      const userCount = await db.query('SELECT COUNT(*) FROM users');
-      const isFirstUser = parseInt(userCount.rows[0].count) === 0;
-      const role = isFirstUser ? 'admin' : 'user';
-
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const result = await db.query(
-        `INSERT INTO users (username, email, password_hash, role, is_active) 
-         VALUES ($1, $2, $3, $4, true) 
-         RETURNING id, username, email, role, created_at`,
-        [username, email, hashedPassword, role]
-      );
+      const newUser = {
+        id: Date.now().toString(),
+        username,
+        email,
+        password: hashedPassword,
+        createdAt: new Date().toISOString()
+      };
 
-      const newUser = result.rows[0];
+      users.push(newUser);
+      await this.saveUsers(users);
 
       const token = jwt.sign(
-        { id: newUser.id, username: newUser.username, role: newUser.role },
+        { id: newUser.id, username: newUser.username },
         JWT_SECRET,
         { expiresIn: '24h' }
       );
@@ -106,12 +91,10 @@ class AuthController {
           id: newUser.id,
           username: newUser.username,
           email: newUser.email,
-          role: newUser.role,
-          createdAt: newUser.created_at
+          createdAt: newUser.createdAt
         }
       });
     } catch (error) {
-      console.error('Register error:', error);
       res.status(500).json({ error: error.message });
     }
   }
@@ -125,29 +108,18 @@ class AuthController {
       }
 
       const decoded = jwt.verify(token, JWT_SECRET);
-      
-      const result = await db.query(
-        'SELECT id, username, email, role, avatar, is_active, created_at FROM users WHERE id = $1',
-        [decoded.id]
-      );
-
-      const user = result.rows[0];
+      const users = await this.getUsers();
+      const user = users.find(u => u.id === decoded.id);
 
       if (!user) {
         return res.status(404).json({ error: 'Benutzer nicht gefunden' });
-      }
-
-      if (!user.is_active) {
-        return res.status(401).json({ error: 'Benutzerkonto ist deaktiviert' });
       }
 
       res.json({
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        createdAt: user.created_at
+        createdAt: user.createdAt
       });
     } catch (error) {
       res.status(401).json({ error: 'Ungültiger Token' });
@@ -158,92 +130,34 @@ class AuthController {
     res.json({ message: 'Erfolgreich ausgeloggt' });
   }
 
-  async getAllUsers(req, res) {
-    try {
-      const result = await db.query(
-        'SELECT id, username, email, role, avatar, is_active, created_at FROM users ORDER BY created_at DESC'
-      );
+  async getUsers() {
+    const fs = require('fs').promises;
+    const path = require('path');
+    const USERS_FILE = path.join(__dirname, '../../data/users.json');
 
-      res.json(result.rows);
+    try {
+      const content = await fs.readFile(USERS_FILE, 'utf-8');
+      return JSON.parse(content);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      const defaultUsers = [
+        {
+          id: '1',
+          username: 'admin',
+          email: 'admin@openclaw.local',
+          password: await bcrypt.hash('admin123', 10),
+          createdAt: new Date().toISOString()
+        }
+      ];
+      await fs.writeFile(USERS_FILE, JSON.stringify(defaultUsers, null, 2));
+      return defaultUsers;
     }
   }
 
-  async updateUser(req, res) {
-    try {
-      const { id } = req.params;
-      const { username, email, role, is_active, avatar } = req.body;
-      const token = req.headers.authorization?.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).json({ error: 'Nur Administratoren können Benutzer bearbeiten' });
-      }
-
-      const updates = [];
-      const values = [];
-      let paramCount = 1;
-
-      if (username) {
-        updates.push(`username = $${paramCount++}`);
-        values.push(username);
-      }
-      if (email) {
-        updates.push(`email = $${paramCount++}`);
-        values.push(email);
-      }
-      if (role) {
-        updates.push(`role = $${paramCount++}`);
-        values.push(role);
-      }
-      if (is_active !== undefined) {
-        updates.push(`is_active = $${paramCount++}`);
-        values.push(is_active);
-      }
-      if (avatar !== undefined) {
-        updates.push(`avatar = $${paramCount++}`);
-        values.push(avatar);
-      }
-
-      updates.push(`updated_at = CURRENT_TIMESTAMP`);
-      values.push(id);
-
-      const result = await db.query(
-        `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, username, email, role, avatar, is_active`,
-        values
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Benutzer nicht gefunden' });
-      }
-
-      res.json(result.rows[0]);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-
-  async deleteUser(req, res) {
-    try {
-      const { id } = req.params;
-      const token = req.headers.authorization?.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).json({ error: 'Nur Administratoren können Benutzer löschen' });
-      }
-
-      if (decoded.id === parseInt(id)) {
-        return res.status(400).json({ error: 'Sie können sich nicht selbst löschen' });
-      }
-
-      await db.query('DELETE FROM users WHERE id = $1', [id]);
-
-      res.json({ message: 'Benutzer gelöscht' });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+  async saveUsers(users) {
+    const fs = require('fs').promises;
+    const path = require('path');
+    const USERS_FILE = path.join(__dirname, '../../data/users.json');
+    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
   }
 
   verifyToken(token) {

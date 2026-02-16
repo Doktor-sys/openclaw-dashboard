@@ -983,11 +983,6 @@
             <div class="nav-section">
                 <div class="nav-section-title">System</div>
                 
-                <div class="nav-item" onclick="showSection('analytics', this)">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
-                </div>
-                
                 <div class="nav-item" onclick="showSection('settings', this)">
                     <i class="fas fa-sliders-h"></i>
                     <span>Einstellungen</span>
@@ -1012,268 +1007,6 @@
     </div>
 
     <script>
-        // Auth Configuration
-        const AUTH_TOKEN_KEY = 'openclawAuthToken';
-        const AUTH_USER_KEY = 'openclawUser';
-        
-        // Auth Functions
-        async function login(username, password) {
-            try {
-                const response = await fetch(`${API_URL}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.token) {
-                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
-                    updateUserCard(data.user);
-                    showToast('Erfolgreich eingeloggt!', 'success');
-                    return true;
-                } else {
-                    showToast(data.error || 'Login fehlgeschlagen', 'error');
-                    return false;
-                }
-            } catch (err) {
-                showToast('Verbindungsfehler', 'error');
-                return false;
-            }
-        }
-        
-        async function register(username, email, password) {
-            try {
-                const response = await fetch(`${API_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.token) {
-                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
-                    updateUserCard(data.user);
-                    showToast('Account erstellt!', 'success');
-                    return true;
-                } else {
-                    showToast(data.error || 'Registrierung fehlgeschlagen', 'error');
-                    return false;
-                }
-            } catch (err) {
-                showToast('Verbindungsfehler', 'error');
-                return false;
-            }
-        }
-        
-        function logout() {
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            localStorage.removeItem(AUTH_USER_KEY);
-            updateUserCard(null);
-            showToast('Ausgeloggt', 'info');
-            renderLoginModal();
-        }
-        
-        function getAuthToken() {
-            return localStorage.getItem(AUTH_TOKEN_KEY);
-        }
-        
-        function getCurrentUser() {
-            const user = localStorage.getItem(AUTH_USER_KEY);
-            return user ? JSON.parse(user) : null;
-        }
-        
-        function updateUserCard(user) {
-            const userCard = document.querySelector('.user-card');
-            if (!userCard) return;
-            
-            if (user) {
-                const initials = user.username.substring(0, 2).toUpperCase();
-                const roleLabel = user.role === 'admin' ? 'Administrator' : 'Benutzer';
-                userCard.innerHTML = `
-                    <div class="user-avatar" style="background: var(--primary-500);">${initials}</div>
-                    <div class="user-info">
-                        <div class="user-name">${user.username}</div>
-                        <div class="user-role">${roleLabel}</div>
-                    </div>
-                    <i class="fas fa-sign-out-alt" style="color: var(--text-tertiary); cursor: pointer;" onclick="logout()" title="Ausloggen"></i>
-                `;
-            } else {
-                userCard.innerHTML = `
-                    <div class="user-avatar" style="background: var(--bg-tertiary); color: var(--text-secondary);">?</div>
-                    <div class="user-info">
-                        <div class="user-name" style="cursor: pointer;" onclick="renderLoginModal()">Einloggen</div>
-                        <div class="user-role">Klicken zum Anmelden</div>
-                    </div>
-                `;
-            }
-        }
-        
-        function renderLoginModal() {
-            const modal = document.createElement('div');
-            modal.id = 'loginModal';
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 400px; padding: 32px;">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h2 style="margin: 0 0 8px 0;">🔐 OpenClaw Login</h2>
-                        <p style="color: var(--text-secondary); margin: 0;">Melde dich an oder erstelle einen Account</p>
-                    </div>
-                    
-                    <div id="loginForm">
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Benutzername</label>
-                            <input type="text" id="loginUsername" placeholder="Benutzername" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
-                        </div>
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Passwort</label>
-                            <input type="password" id="loginPassword" placeholder="Passwort" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="handleLogin()">
-                            <i class="fas fa-sign-in-alt"></i> Einloggen
-                        </button>
-                        <div style="text-align: center; margin-top: 16px;">
-                            <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary-500);">Noch kein Account? Registrieren</a>
-                        </div>
-                    </div>
-                    
-                    <div id="registerForm" style="display: none;">
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Benutzername</label>
-                            <input type="text" id="regUsername" placeholder="Benutzername" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
-                        </div>
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">E-Mail</label>
-                            <input type="email" id="regEmail" placeholder="email@beispiel.de" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
-                        </div>
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Passwort</label>
-                            <input type="password" id="regPassword" placeholder="Mindestens 6 Zeichen" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="handleRegister()">
-                            <i class="fas fa-user-plus"></i> Registrieren
-                        </button>
-                        <div style="text-align: center; margin-top: 16px;">
-                            <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary-500);">Bereits einen Account? Einloggen</a>
-                        </div>
-                    </div>
-                    
-                    <button class="modal-close" onclick="closeLoginModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-tertiary);">&times;</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeLoginModal();
-            });
-        }
-        
-        function toggleAuthMode(e) {
-            e.preventDefault();
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            if (loginForm.style.display === 'none') {
-                loginForm.style.display = 'block';
-                registerForm.style.display = 'none';
-            } else {
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'block';
-            }
-        }
-        
-        async function handleLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!username || !password) {
-                showToast('Bitte Benutzername und Passwort eingeben', 'warning');
-                return;
-            }
-            
-            const success = await login(username, password);
-            if (success) {
-                closeLoginModal();
-            }
-        }
-        
-        async function handleRegister() {
-            const username = document.getElementById('regUsername').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-            
-            if (!username || !email || !password) {
-                showToast('Bitte alle Felder ausfüllen', 'warning');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showToast('Passwort muss mindestens 6 Zeichen haben', 'warning');
-                return;
-            }
-            
-            const success = await register(username, email, password);
-            if (success) {
-                closeLoginModal();
-            }
-        }
-        
-        function closeLoginModal() {
-            const modal = document.getElementById('loginModal');
-            if (modal) modal.remove();
-        }
-        
-        // User Management
-        async function loadUserManagement() {
-            const container = document.getElementById('userManagement');
-            if (!container) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/auth/users`, {
-                    headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-                });
-                
-                if (!response.ok) throw new Error('Keine Berechtigung');
-                
-                const users = await response.json();
-                
-                container.innerHTML = `
-                    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
-                        ${users.map(user => `
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${user.role === 'admin' ? 'var(--primary-500)' : 'var(--bg-secondary)'}; display: flex; align-items: center; justify-content: center; color: ${user.role === 'admin' ? '#fff' : 'var(--text-secondary)'}; font-weight: 600;">
-                                        ${user.username.substring(0,2).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div style="font-weight: 600;">${user.username}</div>
-                                        <div style="font-size: 12px; color: var(--text-secondary);">${user.email}</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 4px; background: ${user.role === 'admin' ? '#dbeafe' : '#f3f4f6'}; color: ${user.role === 'admin' ? '#1d4ed8' : '#6b7280'};">
-                                        ${user.role === 'admin' ? 'Admin' : 'User'}
-                                    </span>
-                                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 4px; background: ${user.is_active ? '#dcfce7' : '#fee2e2'}; color: ${user.is_active ? '#16a34a' : '#dc2626'};">
-                                        ${user.is_active ? 'Aktiv' : 'Inaktiv'}
-                                    </span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                        <p style="font-size: 12px; color: var(--text-tertiary);">
-                            <i class="fas fa-info-circle"></i> Der erste registrierte Benutzer ist automatisch Admin.
-                        </p>
-                    </div>
-                `;
-            } catch (err) {
-                container.innerHTML = `<div style="color: var(--text-error);">Fehler beim Laden: ${err.message}</div>`;
-            }
-        }
-        
         // API Configuration
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3002/api' 
@@ -1281,21 +1014,8 @@
         
         // Initial Load
         document.addEventListener('DOMContentLoaded', () => {
-            try {
-                // Check auth status
-                const user = getCurrentUser();
-                if (user) {
-                    updateUserCard(user);
-                } else {
-                    renderLoginModal();
-                }
-                
-                renderOverview();
-                showToast('Willkommen im neuen OpenClaw Dashboard Pro! 🎉', 'success');
-            } catch (e) {
-                console.error('Init error:', e);
-                document.getElementById('mainContent').innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Fehler beim Laden</h2><pre>' + e.message + '</pre></div>';
-            }
+            renderOverview();
+            showToast('Willkommen im neuen OpenClaw Dashboard Pro! 🎉', 'success');
         });
 
         // Toast Notification System
@@ -1357,9 +1077,6 @@
                         break;
                     case 'context':
                         renderContext();
-                        break;
-                    case 'analytics':
-                        renderAnalytics();
                         break;
                     case 'settings':
                         renderSettings();
@@ -3187,9 +2904,9 @@ Ihr OpenClaw Team`;
         <div class="time" id="time">00:00:00</div>
         <div class="date" id="date">Datum</div>
     </div>
-    <\/script>
-<\/body>
-<\/html>`,
+    <script>function update(){const n=new Date();document.getElementById('time').textContent=n.toLocaleTimeString('de-DE');document.getElementById('date').textContent=n.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}update();setInterval(update,1000)<\/script>
+</body>
+</html>`,
 
                 weather: `<!DOCTYPE html>
 <html lang="de">
@@ -3205,8 +2922,8 @@ Ihr OpenClaw Team`;
         <div class="temp">22°C</div>
         <div style="color:#666">Sonnig</div>
     </div>
-<\/body>
-<\/html>`,
+</body>
+</html>`,
 
                 calculator: `<!DOCTYPE html>
 <html lang="de">
@@ -3227,8 +2944,8 @@ Ihr OpenClaw Team`;
         </div>
     </div>
     <script>let d=document.getElementById('d');function a(v){d.textContent==='0'?d.textContent=v:d.textContent+=v}function c(){d.textContent='0'}function e(){try{d.textContent=eval(d.textContent)}catch{d.textContent='Error'}}<\/script>
-<\/body>
-<\/html>`,
+</body>
+</html>`,
 
                 todo: `<!DOCTYPE html>
 <html lang="de">
@@ -3243,9 +2960,9 @@ Ihr OpenClaw Team`;
         <div class="input"><input type="text" id="in" placeholder="Neue Aufgabe..."><button class="add" onclick="add()">+</button></div>
         <ul id="list"></ul>
     </div>
-    <\/script>
-<\/body>
-<\/html>`
+    <script>let t=[];function add(){const i=document.getElementById('in');if(i.value.trim()){t.push({id:Date.now(),text:i.value,done:false});i.value='';render()}}function toggle(id){const x=t.find(x=>x.id===id);if(x){x.done=!x.done;render()}}function del(id){t=t.filter(x=>x.id!==id);render()}function render(){document.getElementById('list').innerHTML=t.map(x=>\`<li class="\${x.done?'done':''}"><input type="checkbox" class="cb" \${x.done?'checked':''} onchange="toggle(\${x.id})"><span>\${x.text}</span><button class="del" onclick="del(\${x.id})">×</button></li>\`).join('')}document.getElementById('in').addEventListener('keypress',e=>{if(e.key==='Enter')add()})<\/script>
+</body>
+</html>`
             };
             return templates[appType] || templates.clock;
         }
@@ -3661,8 +3378,6 @@ Ihr OpenClaw Team`;
         function renderSettings() {
             const currentTheme = getCurrentTheme();
             const apiKeys = getAllApiKeys();
-            const currentUser = getCurrentUser();
-            const isAdmin = currentUser && currentUser.role === 'admin';
             
             document.getElementById('mainContent').innerHTML = `
                 <div class="page-header">
@@ -3672,22 +3387,6 @@ Ihr OpenClaw Team`;
 
                 <div class="content-grid" style="grid-template-columns: 1fr 1fr;">
                     <div>
-                        ${isAdmin ? `
-                        <div class="card" style="margin-bottom: 24px;">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    <i class="fas fa-users"></i> Benutzerverwaltung
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="userManagement">
-                                    <div style="text-align: center; padding: 20px;">
-                                        <i class="fas fa-spinner fa-spin"></i> Lade Benutzer...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        ` : ''}
                         <div class="card" style="margin-bottom: 24px;">
                             <div class="card-header">
                                 <div class="card-title">
@@ -3807,51 +3506,6 @@ Ihr OpenClaw Team`;
                             </div>
                         </div>
 
-                        <div class="card" style="margin-bottom: 24px;">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    <i class="fas fa-bell"></i> Webhooks
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div style="display: flex; flex-direction: column; gap: 16px;">
-                                    <div>
-                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
-                                            <i class="fab fa-slack"></i> Slack Webhook URL
-                                        </label>
-                                        <div style="display: flex; gap: 8px;">
-                                            <input type="password" id="webhook-slack" value="${localStorage.getItem('webhook_slack') || ''}" placeholder="https://hooks.slack.com/services/..."
-                                                style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-family: monospace; font-size: 13px; background: var(--bg-tertiary);">
-                                            <button class="btn btn-primary btn-sm" onclick="toggleApiKeyVisibility('webhook-slack')" title="Anzeigen/Verbergen">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('slack')">
-                                            <i class="fas fa-paper-plane"></i> Testen
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
-                                            <i class="fab fa-discord"></i> Discord Webhook URL
-                                        </label>
-                                        <div style="display: flex; gap: 8px;">
-                                            <input type="password" id="webhook-discord" value="${localStorage.getItem('webhook_discord') || ''}" placeholder="https://discord.com/api/webhooks/..."
-                                                style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-family: monospace; font-size: 13px; background: var(--bg-tertiary);">
-                                            <button class="btn btn-primary btn-sm" onclick="toggleApiKeyVisibility('webhook-discord')" title="Anzeigen/Verbergen">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('discord')">
-                                            <i class="fas fa-paper-plane"></i> Testen
-                                        </button>
-                                    </div>
-                                    <div id="webhookStatus" style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; display: none;">
-                                        <div style="font-size: 13px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title">
@@ -3943,12 +3597,6 @@ Ihr OpenClaw Team`;
                 </div>
             `;
             
-            // Load user management if admin
-            const currentUser = getCurrentUser();
-            if (currentUser && currentUser.role === 'admin') {
-                loadUserManagement();
-            }
-            
             // System-Status aktualisieren
             updateSystemStatus();
         }
@@ -4005,49 +3653,6 @@ Ihr OpenClaw Team`;
                     document.getElementById(`apiKey-${provider}`).value = '';
                     showToast('API Key gelöscht', 'success');
                 }
-            }
-        }
-
-        // Webhook testen
-        async function testWebhook(platform) {
-            const input = document.getElementById(`webhook-${platform}`);
-            const webhookUrl = input.value.trim();
-            const statusDiv = document.getElementById('webhookStatus');
-            
-            if (!webhookUrl) {
-                showToast('Bitte Webhook URL eingeben', 'warning');
-                return;
-            }
-
-            // Save to localStorage
-            localStorage.setItem(`webhook_${platform}`, webhookUrl);
-            
-            statusDiv.style.display = 'block';
-            statusDiv.querySelector('div').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sende Test-Nachricht...';
-            
-            try {
-                const response = await fetch('/api/webhooks/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        platform: platform,
-                        message: '✅ Test-Nachricht von OpenClaw Dashboard',
-                        data: { webhookUrl: webhookUrl }
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    statusDiv.querySelector('div').innerHTML = `<i class="fas fa-check-circle" style="color: #22c55e;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: Nachricht erfolgreich gesendet!`;
-                    showToast(`${platform} Webhook funktioniert!`, 'success');
-                } else {
-                    statusDiv.querySelector('div').innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: ${result.error || 'Fehler'}`;
-                    showToast(result.error || 'Fehler beim Senden', 'error');
-                }
-            } catch (err) {
-                statusDiv.querySelector('div').innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: ${err.message}`;
-                showToast('Verbindungsfehler', 'error');
             }
         }
         
@@ -4133,165 +3738,6 @@ Ihr OpenClaw Team`;
                 const apiStatus = document.getElementById('apiStatus');
                 apiStatus.innerHTML = '✗ Fehler';
                 apiStatus.style.color = '#dc2626';
-            }
-        }
-
-        // Render Analytics
-        async function renderAnalytics() {
-            const currentUser = getCurrentUser();
-            const isAdmin = currentUser && currentUser.role === 'admin';
-            
-            document.getElementById('mainContent').innerHTML = `
-                <div class="page-header">
-                    <h2>📊 Analytics & Kostenübersicht</h2>
-                    <p>API-Nutzung und geschätzte Kosten.</p>
-                </div>
-
-                <div style="margin-bottom: 24px; display: flex; gap: 12px;">
-                    <button class="btn btn-sm" onclick="loadAnalytics('24h')">24h</button>
-                    <button class="btn btn-sm" onclick="loadAnalytics('7d')">7 Tage</button>
-                    <button class="btn btn-sm" onclick="loadAnalytics('30d')">30 Tage</button>
-                    <button class="btn btn-sm" onclick="loadAnalytics('all')">Alle</button>
-                    ${isAdmin ? '<button class="btn btn-sm" style="background: #fee2e2; color: #dc2626; margin-left: auto;" onclick="resetAnalytics()"><i class="fas fa-trash"></i> Zurücksetzen</button>' : ''}
-                </div>
-
-                <div id="analyticsContent">
-                    <div style="text-align: center; padding: 60px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 32px;"></i>
-                        <p style="margin-top: 16px;">Lade Analytics...</p>
-                    </div>
-                </div>
-            `;
-            
-            loadAnalytics('7d');
-        }
-
-        async function loadAnalytics(period = '7d') {
-            const container = document.getElementById('analyticsContent');
-            if (!container) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/analytics/stats?period=${period}`, {
-                    headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-                });
-                
-                if (!response.ok) throw new Error('Keine Berechtigung');
-                
-                const data = await response.json();
-                
-                if (!data.success) throw new Error(data.error);
-                
-                const cost = data.costEstimate;
-                const totalCalls = data.summary.totalCalls;
-                const avgDuration = Math.round(data.summary.avgDuration);
-                
-                container.innerHTML = `
-                    <div class="content-grid" style="grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-                        <div class="card" style="text-align: center;">
-                            <div style="font-size: 32px; font-weight: 700; color: var(--primary-500);">${totalCalls.toLocaleString()}</div>
-                            <div style="color: var(--text-secondary);">API Aufrufe</div>
-                        </div>
-                        <div class="card" style="text-align: center;">
-                            <div style="font-size: 32px; font-weight: 700; color: #22c55e;">$${cost.total.toFixed(4)}</div>
-                            <div style="color: var(--text-secondary);">Geschätzte Kosten</div>
-                        </div>
-                        <div class="card" style="text-align: center;">
-                            <div style="font-size: 32px; font-weight: 700; color: #3b82f6;">${avgDuration}ms</div>
-                            <div style="color: var(--text-secondary);">Durchschn. Dauer</div>
-                        </div>
-                        <div class="card" style="text-align: center;">
-                            <div style="font-size: 32px; font-weight: 700; color: #f59e0b;">${data.byEndpoint.length}</div>
-                            <div style="color: var(--text-secondary);">Endpunkte</div>
-                        </div>
-                    </div>
-
-                    <div class="content-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title"><i class="fas fa-chart-bar"></i> Aufrufe nach Endpunkt</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                    ${data.byEndpoint.map(e => `
-                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
-                                            <code style="font-size: 12px;">${e.endpoint}</code>
-                                            <span style="font-weight: 600;">${e.count}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title"><i class="fas fa-dollar-sign"></i> Kostenaufteilung</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                    ${Object.entries(cost.breakdown).map(([provider, c]) => `
-                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
-                                            <span>${provider}</span>
-                                            <span style="font-weight: 600; color: #22c55e;">$${c.toFixed(4)}</span>
-                                        </div>
-                                    `).join('')}
-                                    ${Object.keys(cost.breakdown).length === 0 ? '<div style="color: var(--text-tertiary);">Keine Kosten erfasst</div>' : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card" style="margin-top: 24px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-history"></i> Letzte Aufrufe</div>
-                        </div>
-                        <div class="card-body" style="padding: 0;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="border-bottom: 1px solid var(--border-color);">
-                                        <th style="padding: 12px; text-align: left; font-size: 12px; color: var(--text-secondary);">Zeit</th>
-                                        <th style="padding: 12px; text-align: left; font-size: 12px; color: var(--text-secondary);">Endpunkt</th>
-                                        <th style="padding: 12px; text-align: left; font-size: 12px; color: var(--text-secondary);">Dauer</th>
-                                        <th style="padding: 12px; text-align: left; font-size: 12px; color: var(--text-secondary);">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${data.recentCalls.map(c => `
-                                        <tr style="border-bottom: 1px solid var(--border-color);">
-                                            <td style="padding: 12px; font-size: 12px;">${new Date(c.created_at).toLocaleString()}</td>
-                                            <td style="padding: 12px;"><code style="font-size: 11px;">${c.endpoint}</code></td>
-                                            <td style="padding: 12px; font-size: 12px;">${c.duration_ms}ms</td>
-                                            <td style="padding: 12px;"><span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; background: ${c.status_code < 400 ? '#dcfce7' : '#fee2e2'}; color: ${c.status_code < 400 ? '#16a34a' : '#dc2626'};">${c.status_code}</span></td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-error);">Fehler: ${err.message}</div>`;
-            }
-        }
-
-        async function resetAnalytics() {
-            if (!confirm('Möchten Sie alle Analytics-Daten zurücksetzen?')) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/analytics/reset`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showToast('Analytics zurückgesetzt', 'success');
-                    loadAnalytics('7d');
-                } else {
-                    showToast(data.error || 'Fehler', 'error');
-                }
-            } catch (err) {
-                showToast('Fehler: ' + err.message, 'error');
             }
         }
 

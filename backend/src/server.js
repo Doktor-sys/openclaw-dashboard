@@ -21,9 +21,6 @@ const codeGeneratorRoutes = require('./routes/codeGenerator');
 const newsletterRoutes = require('./routes/newsletter');
 const contextDocsRoutes = require('./routes/context-docs');
 const githubRoutes = require('./routes/github');
-const webhookRoutes = require('./routes/webhook');
-const analyticsRoutes = require('./routes/analytics');
-const analyticsController = require('./controllers/analyticsController');
 const { initializeDatabase } = require('./config/init-db');
 
 const app = express();
@@ -32,9 +29,6 @@ const wss = new WebSocket.Server({ server });
 
 app.use(cors());
 app.use(express.json());
-
-// Analytics tracking middleware
-app.use('/api', analyticsController.logApiCall.bind(analyticsController));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -52,8 +46,6 @@ app.use('/api/code', codeGeneratorRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/context-docs', contextDocsRoutes);
 app.use('/api/github', githubRoutes);
-app.use('/api/webhooks', webhookRoutes);
-app.use('/api/analytics', analyticsRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
