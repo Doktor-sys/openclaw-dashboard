@@ -22,6 +22,7 @@ const newsletterRoutes = require('./routes/newsletter');
 const contextDocsRoutes = require('./routes/context-docs');
 const githubRoutes = require('./routes/github');
 const webhookRoutes = require('./routes/webhook');
+const analyticsRoutes = require('./routes/analytics');
 const { initializeDatabase } = require('./config/init-db');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/context-docs', contextDocsRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
