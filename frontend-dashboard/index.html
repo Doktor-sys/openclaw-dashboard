@@ -1281,16 +1281,21 @@
         
         // Initial Load
         document.addEventListener('DOMContentLoaded', () => {
-            // Check auth status
-            const user = getCurrentUser();
-            if (user) {
-                updateUserCard(user);
-            } else {
-                renderLoginModal();
+            try {
+                // Check auth status
+                const user = getCurrentUser();
+                if (user) {
+                    updateUserCard(user);
+                } else {
+                    renderLoginModal();
+                }
+                
+                renderOverview();
+                showToast('Willkommen im neuen OpenClaw Dashboard Pro! 🎉', 'success');
+            } catch (e) {
+                console.error('Init error:', e);
+                document.getElementById('mainContent').innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Fehler beim Laden</h2><pre>' + e.message + '</pre></div>';
             }
-            
-            renderOverview();
-            showToast('Willkommen im neuen OpenClaw Dashboard Pro! 🎉', 'success');
         });
 
         // Toast Notification System
