@@ -1007,24 +1007,9 @@
     </div>
 
     <script>
-        // Auth Configuration - sessionStorage instead of localStorage (avoids tracking issues)
+        // Auth Configuration
         const AUTH_TOKEN_KEY = 'openclawAuthToken';
         const AUTH_USER_KEY = 'openclawUser';
-        
-        // Fallback to sessionStorage if localStorage fails
-        const storage = {
-            setItem: (key, value) => {
-                try { localStorage.setItem(key, value); } catch(e) { sessionStorage.setItem(key, value); }
-            },
-            getItem: (key) => {
-                try { return localStorage.getItem(key) || sessionStorage.getItem(key); } 
-                catch(e) { return sessionStorage.getItem(key); }
-            },
-            removeItem: (key) => {
-                try { localStorage.removeItem(key); } catch(e) {}
-                try { sessionStorage.removeItem(key); } catch(e) {}
-            }
-        };
         
         function login(username, password) {
             return fetch(`${API_URL}/auth/login`, {
@@ -1033,8 +1018,8 @@
                 body: JSON.stringify({ username, password })
             }).then(res => res.json()).then(data => {
                 if (data.token) {
-                    storage.setItem(AUTH_TOKEN_KEY, data.token);
-                    storage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
                     updateUserCard(data.user);
                     showToast('Erfolgreich eingeloggt!', 'success');
                     return true;
@@ -1055,8 +1040,8 @@
                 body: JSON.stringify({ username, email, password })
             }).then(res => res.json()).then(data => {
                 if (data.token) {
-                    storage.setItem(AUTH_TOKEN_KEY, data.token);
-                    storage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
                     updateUserCard(data.user);
                     showToast('Account erstellt!', 'success');
                     return true;
@@ -1071,19 +1056,19 @@
         }
         
         function logout() {
-            storage.removeItem(AUTH_TOKEN_KEY);
-            storage.removeItem(AUTH_USER_KEY);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_USER_KEY);
             updateUserCard(null);
             showToast('Ausgeloggt', 'info');
             renderLoginModal();
         }
         
         function getAuthToken() {
-            return storage.getItem(AUTH_TOKEN_KEY);
+            return localStorage.getItem(AUTH_TOKEN_KEY);
         }
         
         function getCurrentUser() {
-            const user = storage.getItem(AUTH_USER_KEY);
+            const user = localStorage.getItem(AUTH_USER_KEY);
             return user ? JSON.parse(user) : null;
         }
         
