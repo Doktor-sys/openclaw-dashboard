@@ -1007,6 +1007,219 @@
     </div>
 
     <script>
+        // Auth Configuration
+        const AUTH_TOKEN_KEY = 'openclawAuthToken';
+        const AUTH_USER_KEY = 'openclawUser';
+        
+        // Auth Functions
+        async function login(username, password) {
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.token) {
+                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                    updateUserCard(data.user);
+                    showToast('Erfolgreich eingeloggt!', 'success');
+                    return true;
+                } else {
+                    showToast(data.error || 'Login fehlgeschlagen', 'error');
+                    return false;
+                }
+            } catch (err) {
+                showToast('Verbindungsfehler', 'error');
+                return false;
+            }
+        }
+        
+        async function register(username, email, password) {
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.token) {
+                    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+                    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                    updateUserCard(data.user);
+                    showToast('Account erstellt!', 'success');
+                    return true;
+                } else {
+                    showToast(data.error || 'Registrierung fehlgeschlagen', 'error');
+                    return false;
+                }
+            } catch (err) {
+                showToast('Verbindungsfehler', 'error');
+                return false;
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_USER_KEY);
+            updateUserCard(null);
+            showToast('Ausgeloggt', 'info');
+            renderLoginModal();
+        }
+        
+        function getAuthToken() {
+            return localStorage.getItem(AUTH_TOKEN_KEY);
+        }
+        
+        function getCurrentUser() {
+            const user = localStorage.getItem(AUTH_USER_KEY);
+            return user ? JSON.parse(user) : null;
+        }
+        
+        function updateUserCard(user) {
+            const userCard = document.querySelector('.user-card');
+            if (!userCard) return;
+            
+            if (user) {
+                const initials = user.username.substring(0, 2).toUpperCase();
+                const roleLabel = user.role === 'admin' ? 'Administrator' : 'Benutzer';
+                userCard.innerHTML = `
+                    <div class="user-avatar" style="background: var(--primary-500);">${initials}</div>
+                    <div class="user-info">
+                        <div class="user-name">${user.username}</div>
+                        <div class="user-role">${roleLabel}</div>
+                    </div>
+                    <i class="fas fa-sign-out-alt" style="color: var(--text-tertiary); cursor: pointer;" onclick="logout()" title="Ausloggen"></i>
+                `;
+            } else {
+                userCard.innerHTML = `
+                    <div class="user-avatar" style="background: var(--bg-tertiary); color: var(--text-secondary);">?</div>
+                    <div class="user-info">
+                        <div class="user-name" style="cursor: pointer;" onclick="renderLoginModal()">Einloggen</div>
+                        <div class="user-role">Klicken zum Anmelden</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderLoginModal() {
+            const modal = document.createElement('div');
+            modal.id = 'loginModal';
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; padding: 32px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h2 style="margin: 0 0 8px 0;">🔐 OpenClaw Login</h2>
+                        <p style="color: var(--text-secondary); margin: 0;">Melde dich an oder erstelle einen Account</p>
+                    </div>
+                    
+                    <div id="loginForm">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Benutzername</label>
+                            <input type="text" id="loginUsername" placeholder="Benutzername" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Passwort</label>
+                            <input type="password" id="loginPassword" placeholder="Passwort" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="handleLogin()">
+                            <i class="fas fa-sign-in-alt"></i> Einloggen
+                        </button>
+                        <div style="text-align: center; margin-top: 16px;">
+                            <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary-500);">Noch kein Account? Registrieren</a>
+                        </div>
+                    </div>
+                    
+                    <div id="registerForm" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Benutzername</label>
+                            <input type="text" id="regUsername" placeholder="Benutzername" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">E-Mail</label>
+                            <input type="email" id="regEmail" placeholder="email@beispiel.de" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Passwort</label>
+                            <input type="password" id="regPassword" placeholder="Mindestens 6 Zeichen" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); box-sizing: border-box;">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="handleRegister()">
+                            <i class="fas fa-user-plus"></i> Registrieren
+                        </button>
+                        <div style="text-align: center; margin-top: 16px;">
+                            <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary-500);">Bereits einen Account? Einloggen</a>
+                        </div>
+                    </div>
+                    
+                    <button class="modal-close" onclick="closeLoginModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-tertiary);">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeLoginModal();
+            });
+        }
+        
+        function toggleAuthMode(e) {
+            e.preventDefault();
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
+        
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showToast('Bitte Benutzername und Passwort eingeben', 'warning');
+                return;
+            }
+            
+            const success = await login(username, password);
+            if (success) {
+                closeLoginModal();
+            }
+        }
+        
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            
+            if (!username || !email || !password) {
+                showToast('Bitte alle Felder ausfüllen', 'warning');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Passwort muss mindestens 6 Zeichen haben', 'warning');
+                return;
+            }
+            
+            const success = await register(username, email, password);
+            if (success) {
+                closeLoginModal();
+            }
+        }
+        
+        function closeLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (modal) modal.remove();
+        }
+        
         // API Configuration
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3002/api' 
@@ -1014,6 +1227,14 @@
         
         // Initial Load
         document.addEventListener('DOMContentLoaded', () => {
+            // Check auth status
+            const user = getCurrentUser();
+            if (user) {
+                updateUserCard(user);
+            } else {
+                renderLoginModal();
+            }
+            
             renderOverview();
             showToast('Willkommen im neuen OpenClaw Dashboard Pro! 🎉', 'success');
         });
