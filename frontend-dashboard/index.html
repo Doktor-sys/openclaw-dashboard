@@ -3761,11 +3761,23 @@ Ihr OpenClaw Team`;
         
         // Backup erstellen
         function createBackup() {
+            // Server-Backup
+            fetch(`${API_URL}/backup/create`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Server-Backup erstellt!', 'success');
+                    } else {
+                        // Fallback: Lokales Backup
+                        createLocalBackup();
+                    }
+                })
+                .catch(() => createLocalBackup());
+        }
+        
+        function createLocalBackup() {
             const backup = {
                 appData: appData,
-                agentConfigs: JSON.parse(localStorage.getItem('agentConfigs') || '{}'),
-                apiKeys: JSON.parse(localStorage.getItem(API_KEYS_KEY) || '{}'),
-                theme: localStorage.getItem(THEME_KEY),
                 backupDate: new Date().toISOString(),
                 version: '2.0.0'
             };
