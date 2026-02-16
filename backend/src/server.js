@@ -21,6 +21,7 @@ const codeGeneratorRoutes = require('./routes/codeGenerator');
 const newsletterRoutes = require('./routes/newsletter');
 const contextDocsRoutes = require('./routes/context-docs');
 const githubRoutes = require('./routes/github');
+const webhookRoutes = require('./routes/webhook');
 const { initializeDatabase } = require('./config/init-db');
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/code', codeGeneratorRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/context-docs', contextDocsRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

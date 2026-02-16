@@ -3506,6 +3506,51 @@ Ihr OpenClaw Team`;
                             </div>
                         </div>
 
+                        <div class="card" style="margin-bottom: 24px;">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-bell"></i> Webhooks
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div style="display: flex; flex-direction: column; gap: 16px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+                                            <i class="fab fa-slack"></i> Slack Webhook URL
+                                        </label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="password" id="webhook-slack" value="${localStorage.getItem('webhook_slack') || ''}" placeholder="https://hooks.slack.com/services/..."
+                                                style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-family: monospace; font-size: 13px; background: var(--bg-tertiary);">
+                                            <button class="btn btn-primary btn-sm" onclick="toggleApiKeyVisibility('webhook-slack')" title="Anzeigen/Verbergen">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('slack')">
+                                            <i class="fas fa-paper-plane"></i> Testen
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+                                            <i class="fab fa-discord"></i> Discord Webhook URL
+                                        </label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="password" id="webhook-discord" value="${localStorage.getItem('webhook_discord') || ''}" placeholder="https://discord.com/api/webhooks/..."
+                                                style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-family: monospace; font-size: 13px; background: var(--bg-tertiary);">
+                                            <button class="btn btn-primary btn-sm" onclick="toggleApiKeyVisibility('webhook-discord')" title="Anzeigen/Verbergen">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('discord')">
+                                            <i class="fas fa-paper-plane"></i> Testen
+                                        </button>
+                                    </div>
+                                    <div id="webhookStatus" style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; display: none;">
+                                        <div style="font-size: 13px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title">
@@ -3653,6 +3698,49 @@ Ihr OpenClaw Team`;
                     document.getElementById(`apiKey-${provider}`).value = '';
                     showToast('API Key gelöscht', 'success');
                 }
+            }
+        }
+
+        // Webhook testen
+        async function testWebhook(platform) {
+            const input = document.getElementById(`webhook-${platform}`);
+            const webhookUrl = input.value.trim();
+            const statusDiv = document.getElementById('webhookStatus');
+            
+            if (!webhookUrl) {
+                showToast('Bitte Webhook URL eingeben', 'warning');
+                return;
+            }
+
+            // Save to localStorage
+            localStorage.setItem(`webhook_${platform}`, webhookUrl);
+            
+            statusDiv.style.display = 'block';
+            statusDiv.querySelector('div').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sende Test-Nachricht...';
+            
+            try {
+                const response = await fetch('/api/webhooks/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        platform: platform,
+                        message: '✅ Test-Nachricht von OpenClaw Dashboard',
+                        data: { webhookUrl: webhookUrl }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.querySelector('div').innerHTML = `<i class="fas fa-check-circle" style="color: #22c55e;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: Nachricht erfolgreich gesendet!`;
+                    showToast(`${platform} Webhook funktioniert!`, 'success');
+                } else {
+                    statusDiv.querySelector('div').innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: ${result.error || 'Fehler'}`;
+                    showToast(result.error || 'Fehler beim Senden', 'error');
+                }
+            } catch (err) {
+                statusDiv.querySelector('div').innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}: ${err.message}`;
+                showToast('Verbindungsfehler', 'error');
             }
         }
         
