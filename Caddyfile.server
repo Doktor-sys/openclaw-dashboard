@@ -1,0 +1,8 @@
+openclaw.35-195-246-45.nip.io {
+    encode gzip
+    
+    @api path /api/*
+    reverse_proxy @api openclaw-backend:3002
+    
+    reverse_proxy openclaw-frontend:80
+}
