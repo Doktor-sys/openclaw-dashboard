@@ -1,0 +1,74 @@
+{
+    admin off
+}
+
+mietrecht {
+    tls internal
+    encode gzip
+    handle_path /smartlaw-agent* {
+        reverse_proxy app:5000
+    }
+    handle /static* {
+        reverse_proxy app:5000
+    }
+    handle /.well-known/* {
+        reverse_proxy app:5000
+    }
+    handle / {
+        redir /smartlaw-agent 308
+    }
+}
+
+mietrecht.jurismind.app {
+    tls internal
+    encode gzip
+    handle_path /smartlaw-agent* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle /static* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle /.well-known/* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle / {
+        redir /smartlaw-agent 308
+    }
+}
+
+35-195-246-45.nip.io {
+    tls internal
+    encode gzip
+    handle_path /smartlaw-agent* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle /static* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle /.well-known/* {
+        reverse_proxy https://jurismind-mietrecht-777379434356.europe-west1.run.app {
+            header_up Host {http.request.host}
+        }
+    }
+    handle / {
+        redir /smartlaw-agent 308
+    }
+}
+
+openclaw.35-195-246-45.nip.io {
+    tls internal
+    encode gzip
+    handle /* {
+        reverse_proxy openclaw-frontend:80
+    }
+}

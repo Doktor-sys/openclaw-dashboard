@@ -1,0 +1,25 @@
+{
+    admin off
+}
+
+openclaw.35-195-246-45.nip.io {
+    encode gzip
+    reverse_proxy openclaw-dashboard:80
+}
+
+mietrecht {
+    tls internal
+    encode gzip
+    handle_path /smartlaw-agent* {
+        reverse_proxy app:5000
+    }
+    handle /static* {
+        reverse_proxy app:5000
+    }
+    handle /.well-known/* {
+        reverse_proxy app:5000
+    }
+    handle / {
+        redir /smartlaw-agent 308
+    }
+}
