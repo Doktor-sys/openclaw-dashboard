@@ -3187,9 +3187,9 @@ Ihr OpenClaw Team`;
         <div class="time" id="time">00:00:00</div>
         <div class="date" id="date">Datum</div>
     </div>
-    <script>function update(){const n=new Date();document.getElementById('time').textContent=n.toLocaleTimeString('de-DE');document.getElementById('date').textContent=n.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}update();setInterval(update,1000)<\/script>
-</body>
-</html>`,
+    <\/script>
+<\/body>
+<\/html>`,
 
                 weather: `<!DOCTYPE html>
 <html lang="de">
@@ -3205,8 +3205,8 @@ Ihr OpenClaw Team`;
         <div class="temp">22°C</div>
         <div style="color:#666">Sonnig</div>
     </div>
-</body>
-</html>`,
+<\/body>
+<\/html>`,
 
                 calculator: `<!DOCTYPE html>
 <html lang="de">
@@ -3227,8 +3227,8 @@ Ihr OpenClaw Team`;
         </div>
     </div>
     <script>let d=document.getElementById('d');function a(v){d.textContent==='0'?d.textContent=v:d.textContent+=v}function c(){d.textContent='0'}function e(){try{d.textContent=eval(d.textContent)}catch{d.textContent='Error'}}<\/script>
-</body>
-</html>`,
+<\/body>
+<\/html>`,
 
                 todo: `<!DOCTYPE html>
 <html lang="de">
@@ -3243,9 +3243,9 @@ Ihr OpenClaw Team`;
         <div class="input"><input type="text" id="in" placeholder="Neue Aufgabe..."><button class="add" onclick="add()">+</button></div>
         <ul id="list"></ul>
     </div>
-    <script>let t=[];function add(){const i=document.getElementById('in');if(i.value.trim()){t.push({id:Date.now(),text:i.value,done:false});i.value='';render()}}function toggle(id){const x=t.find(x=>x.id===id);if(x){x.done=!x.done;render()}}function del(id){t=t.filter(x=>x.id!==id);render()}function render(){document.getElementById('list').innerHTML=t.map(x=>\`<li class="\${x.done?'done':''}"><input type="checkbox" class="cb" \${x.done?'checked':''} onchange="toggle(\${x.id})"><span>\${x.text}</span><button class="del" onclick="del(\${x.id})">×</button></li>\`).join('')}document.getElementById('in').addEventListener('keypress',e=>{if(e.key==='Enter')add()})<\/script>
-</body>
-</html>`
+    <\/script>
+<\/body>
+<\/html>`
             };
             return templates[appType] || templates.clock;
         }
