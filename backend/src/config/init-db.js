@@ -107,7 +107,7 @@ const initializeDatabase = async () => {
     await db.query(`
       CREATE TABLE IF NOT EXISTS analytics (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        user_id INTEGER,
         endpoint VARCHAR(255) NOT NULL,
         duration_ms INTEGER DEFAULT 0,
         status_code INTEGER DEFAULT 200,
