@@ -23,6 +23,7 @@ const contextDocsRoutes = require('./routes/context-docs');
 const githubRoutes = require('./routes/github');
 const webhookRoutes = require('./routes/webhook');
 const analyticsRoutes = require('./routes/analytics');
+const analyticsController = require('./controllers/analyticsController');
 const { initializeDatabase } = require('./config/init-db');
 
 const app = express();
@@ -31,6 +32,9 @@ const wss = new WebSocket.Server({ server });
 
 app.use(cors());
 app.use(express.json());
+
+// Analytics tracking middleware
+app.use('/api', analyticsController.logApiCall.bind(analyticsController));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);

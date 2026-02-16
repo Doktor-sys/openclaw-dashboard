@@ -13,15 +13,20 @@ const COST_PER_1K_TOKENS = {
 class AnalyticsController {
   async logApiCall(req, res, next) {
     const startTime = Date.now();
+    const endpoint = req.path;
+    
+    // Skip tracking analytics and health endpoints
+    if (endpoint.startsWith('/analytics') || endpoint === '/health') {
+      return next();
+    }
     
     const originalSend = res.send;
     res.send = function(data) {
       const duration = Date.now() - startTime;
       const statusCode = res.statusCode;
-      const path = req.path;
       
       if (statusCode >= 200 && statusCode < 300) {
-        analyticsController.logCall(req.user?.id || 0, path, duration, statusCode, req.body?.model || 'unknown').catch(console.error);
+        analyticsController.logCall(req.user?.id || 0, endpoint, duration, statusCode, req.body?.model || 'unknown').catch(console.error);
       }
       
       originalSend.call(this, data);
