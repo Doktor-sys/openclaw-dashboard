@@ -3509,6 +3509,39 @@ Ihr OpenClaw Team`;
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title">
+                                    <i class="fas fa-bell"></i> Webhooks
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div style="display: flex; flex-direction: column; gap: 16px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+                                            <i class="fab fa-slack"></i> Slack Webhook URL
+                                        </label>
+                                        <input type="text" id="webhook-slack" placeholder="https://hooks.slack.com/services/..." 
+                                            style="width: 100%; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 13px; background: var(--bg-tertiary);">
+                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('slack')">
+                                            <i class="fas fa-paper-plane"></i> Testen
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+                                            <i class="fab fa-discord"></i> Discord Webhook URL
+                                        </label>
+                                        <input type="text" id="webhook-discord" placeholder="https://discord.com/api/webhooks/..." 
+                                            style="width: 100%; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 13px; background: var(--bg-tertiary);">
+                                        <button class="btn btn-secondary btn-sm" style="margin-top: 8px;" onclick="testWebhook('discord')">
+                                            <i class="fas fa-paper-plane"></i> Testen
+                                        </button>
+                                    </div>
+                                    <div id="webhookStatus" style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
                                     <i class="fas fa-database"></i> Daten & Backup
                                 </div>
                             </div>
@@ -3653,6 +3686,45 @@ Ihr OpenClaw Team`;
                     document.getElementById(`apiKey-${provider}`).value = '';
                     showToast('API Key gelöscht', 'success');
                 }
+            }
+        }
+        
+        // Webhook testen
+        async function testWebhook(platform) {
+            const webhookUrl = document.getElementById(`webhook-${platform}`).value.trim();
+            const statusDiv = document.getElementById('webhookStatus');
+            
+            if (!webhookUrl) {
+                showToast('Bitte Webhook URL eingeben', 'warning');
+                return;
+            }
+
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sende...';
+            
+            try {
+                const response = await fetch('/api/webhooks/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        platform: platform,
+                        message: '✅ Test von OpenClaw Dashboard',
+                        webhookUrl: webhookUrl
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `<i class="fas fa-check-circle" style="color: #22c55e;"></i> ${platform}: Erfolgreich!`;
+                    showToast(`${platform} Webhook funktioniert!`, 'success');
+                } else {
+                    statusDiv.innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform}: ${result.error}`;
+                    showToast(result.error || 'Fehler', 'error');
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `<i class="fas fa-times-circle" style="color: #dc2626;"></i> ${platform}: ${err.message}`;
+                showToast('Verbindungsfehler', 'error');
             }
         }
         
