@@ -78,13 +78,18 @@ class AuthController {
         return res.status(400).json({ error: 'Benutzername oder E-Mail bereits vergeben' });
       }
 
+      // Check if this is the first user - make them admin
+      const userCount = await db.query('SELECT COUNT(*) FROM users');
+      const isFirstUser = parseInt(userCount.rows[0].count) === 0;
+      const role = isFirstUser ? 'admin' : 'user';
+
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const result = await db.query(
         `INSERT INTO users (username, email, password_hash, role, is_active) 
-         VALUES ($1, $2, $3, 'user', true) 
+         VALUES ($1, $2, $3, $4, true) 
          RETURNING id, username, email, role, created_at`,
-        [username, email, hashedPassword]
+        [username, email, hashedPassword, role]
       );
 
       const newUser = result.rows[0];
