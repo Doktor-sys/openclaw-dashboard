@@ -1,0 +1,304 @@
+# OpenClaw Dashboard Pro v2.0 - Bedienungsanleitung
+
+---
+
+## Dashboard-Zugang
+
+**URL:** https://openclaw.35-195-246-45.nip.io
+
+**Server-IP:** 35.195.246.45
+
+---
+
+## 1. Anmeldung am Server (VM)
+
+**SSH-Zugang:**
+```
+Server: 35.195.246.45
+Benutzer: root
+Passwort: [dein Server-Passwort]
+```
+
+---
+
+## 2. Dashboard URLs
+
+| Service | URL | Beschreibung |
+|---------|-----|--------------|
+| Öffentlich | https://openclaw.35-195-246-45.nip.io | Haupt-Dashboard |
+| Frontend | http://35.195.246.45:3000 | Direktzugriff |
+| Backend API | http://35.195.246.45:3002 | API-Schnittstelle |
+
+---
+
+## 3. Erste Schritte im Dashboard
+
+### Übersicht (Overview)
+- Zeigt Dashboard-Statistiken
+- Aktive Projekte, Aufgaben, Agenten
+- Schnellzugriff auf Funktionen
+
+---
+
+## 4. Projekte
+
+**Neues Projekt erstellen:**
+1. Klick auf "Neues Projekt" Button
+2. Felder ausfüllen:
+   - Projektname - z.B. "Website Redesign"
+   - Beschreibung - Kurze Projektbeschreibung
+   - Status - aktiv / abgeschlossen / pausiert
+
+**Projekt bearbeiten:**
+- Klick auf Projekt → Details anzeigen
+- Aufgaben hinzufügen
+- Projekt löschen (mit Bestätigung)
+
+---
+
+## 5. Aufgaben (Tasks)
+
+**Neue Aufgabe erstellen:**
+1. Klick auf "+ Neue Aufgabe"
+2. Felder ausfüllen:
+   - Titel - Was ist zu erledigen?
+   - Beschreibung - Detaillierte Beschreibung
+   - Priorität - Niedrig / Mittel / Hoch / Dringend
+   - Status - Offen / In Bearbeitung / Erledigt
+   - Zugewiesen an - Benutzer auswählen
+   - Projekt - Projekt zuweisen
+
+**Aufgaben filtern:**
+- Nach Status filtern
+- Nach Priorität filtern
+- Nach Projekt filtern
+
+---
+
+## 6. Kanban Board
+
+**Spalten:**
+- Offen - Neue Aufgaben
+- In Bearbeitung - Aktive Aufgaben
+- Review - Zu überprüfen
+- Erledigt - Abgeschlossene Aufgaben
+
+**Bedienung:**
+1. Klick auf "+" in einer Spalte → Neue Aufgabe
+2. Aufgabe per Drag & Drop zwischen Spalten verschieben
+3. Klick auf Aufgabe → Details bearbeiten
+
+---
+
+## 7. Meine Apps
+
+**Verfügbare Apps:**
+- Code Generator - Code generieren lassen
+- Wetter App - Wetterdaten anzeigen
+- Newsletter Manager - Newsletter erstellen
+
+**App starten:**
+1. Gewünschte App auswählen
+2. Konfiguration eingeben
+3. "Start" oder "Ausführen" klicken
+
+---
+
+## 8. Bot Control
+
+**Bot-Status:**
+- Online/Offline-Status anzeigen
+- Bot starten/stoppen
+
+**Bot-Befehle:**
+- Befehle eingeben und ausführen
+- Logs anzeigen
+
+---
+
+## 9. Agenten
+
+**Agenten-Übersicht:**
+- Liste aller aktiven KI-Agenten
+
+**Agent konfigurieren:**
+1. Klick auf Agent
+2. Modell auswählen - z.B. GPT-4, Claude, etc.
+3. System-Prompt - Anweisungen für den Agenten
+4. Temperatur - Kreativitätsstufe (0-1)
+5. Max Tokens - Maximale Antwortlänge
+
+**Agent starten:**
+- "Start" Button klicken
+- Aufgaben zuweisen
+
+---
+
+## 10. Newsletter
+
+**Newsletter erstellen:**
+1. Klick auf "Neuer Newsletter"
+2. Felder ausfüllen:
+   - Betreff - E-Mail Betreffzeile
+   - Empfänger - E-Mail-Adressen (kommagetrennt)
+   - Inhalt - Nachrichtentext oder HTML
+   - Template - Vorlage auswählen (optional)
+
+**Newsletter senden:**
+- Vorschau anzeigen
+- "Senden" klicken
+
+**Newsletter verfolgen:**
+- Versandstatus
+- Öffnungsrate
+- Klickrate
+
+---
+
+## 11. Context/Docs
+
+**Kontext-Dateien verwalten:**
+
+1. **Neue Datei erstellen:**
+   - Klick auf "+ Neue Datei"
+   - Dateiname eingeben
+   - Inhalt schreiben oder einfügen
+
+2. **Dateitypen:**
+   - Markdown (.md)
+   - Text (.txt)
+   - JSON (.json)
+   - HTML (.html)
+
+3. **Dateien nutzen:**
+   - Datei auswählen → In Agenten verwenden
+   - Mehrere Dateien als Kontext kombinieren
+
+---
+
+## 12. Analytics
+
+**Zeiträume auswählen:**
+- 24h
+- 7 Tage
+- 30 Tage
+- Benutzerdefiniert
+
+**Angezeigte Daten:**
+- API-Aufrufe - Anzahl der Requests
+- Kosten - Geschätzte API-Kosten
+- Antwortzeit - Durchschnittliche Ladezeit
+- Top Endpunkte - Meistgenutzte APIs
+
+**Kosten verteilen:**
+- Nach Modell/Endpunkt aufschlüsseln
+- Kosten sparen durch Optimierung
+
+---
+
+## 13. Einstellungen
+
+### a) Allgemein
+- Dashboard-Name
+- Sprache (Deutsch/Englisch)
+- Zeitzone
+- Datumsformat
+
+### b) Design
+- Hell/Dunkel-Modus umschalten
+- Farbschema anpassen
+- Layout-Optionen
+
+### c) Benachrichtigungen
+- E-Mail-Benachrichtigungen an/aus
+- Push-Benachrichtigungen
+- Benachrichtigungstypen auswählen
+
+### d) API-Schlüssel
+- OpenAI API Key - Für GPT-Modelle
+- Anthropic API Key - Für Claude
+- GitHub Token - Für Repository-Zugriff
+
+**API-Key hinzufügen:**
+1. Auf "API-Schlüssel" klicken
+2. Key eintragen (wird verschlüsselt gespeichert)
+3. Speichern klicken
+
+### e) Webhook-Einstellungen
+- Slack Webhook - Für Slack-Benachrichtigungen
+- Discord Webhook - Für Discord-Benachrichtigungen
+
+**Webhook konfigurieren:**
+1. Webhook-URL von Slack/Discord kopieren
+2. In Dashboard einfügen
+3. Testnachricht senden
+
+### f) Sicherheit
+- Zwei-Faktor-Authentifizierung
+- Passwort ändern
+- Aktive Sitzungen
+
+### g) Backup
+- Backup erstellen - Manuell sichern
+- Backup wiederherstellen - Aus Datei importieren
+- Automatische Backups konfigurieren
+
+---
+
+## 14. Server-Wartung (Administratoren)
+
+### Docker-Container starten/stoppen:
+
+```bash
+# Alle Container starten
+docker-compose -f deployment/docker-compose.server.yml up -d
+
+# Container neustarten
+docker-compose -f deployment/docker-compose.server.yml restart
+
+# Logs anzeigen
+docker logs -f openclaw-backend
+```
+
+### Backup erstellen:
+
+```bash
+# Backup via API
+curl -X POST http://35.195.246.45:3002/api/backup/create
+
+# Manuell auf Server
+docker exec openclaw-postgres pg_dump -U openclaw openclaw_db > /root/openclaw-backups/backup.sql
+```
+
+---
+
+## 15. Häufige Probleme & Lösungen
+
+| Problem | Lösung |
+|---------|--------|
+| Seite lädt nicht | Browser-Cache löschen oder privat surfen |
+| API-Fehler | Server-Logs prüfen: docker logs openclaw-backend |
+| Bilder laden nicht | Internetverbindung prüfen |
+| Langsame Ladezeiten | Performance-Optimierung bereits aktiv |
+
+---
+
+## 16. Technische Details
+
+### Docker-Container:
+- openclaw-frontend (Port 3000)
+- openclaw-backend (Port 3002)
+- openclaw-postgres (Port 5432)
+- caddy (Ports 80, 443)
+
+### Datenbank:
+- PostgreSQL 15
+- Datenbank: openclaw_db
+- Benutzer: openclaw
+
+### Build-Datum: 17.02.2026
+### Version: 2.0
+
+---
+
+**Support:** Bei Fragen oder Problemen die Logs prüfen oder Backup wiederherstellen.

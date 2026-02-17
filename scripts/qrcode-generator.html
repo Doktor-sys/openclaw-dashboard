@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw QR-Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        h1 {
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+        #qrcode {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+        #qrcode img {
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .download-btn {
+            display: block;
+            margin-top: 20px;
+            padding: 12px;
+            background: #22c55e;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .download-btn:hover {
+            background: #16a34a;
+        }
+        .preset-btns {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #475569;
+        }
+        .preset-btn:hover {
+            background: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 QR-Code Generator</h1>
+        <p class="subtitle">OpenClaw Dashboard</p>
+        
+        <div class="preset-btns">
+            <button class="preset-btn" onclick="setUrl('https://openclaw.35-195-246-45.nip.io')">🌐 Öffentlich</button>
+            <button class="preset-btn" onclick="setUrl('http://35.195.246.45:3000')">💻 Frontend</button>
+            <button class="preset-btn" onclick="setUrl('http://35.195.246.45:3002/api')">⚙️ API</button>
+        </div>
+        
+        <div class="input-group">
+            <label for="url">URL eingeben:</label>
+            <input type="url" id="url" value="https://openclaw.35-195-246-45.nip.io" placeholder="https://beispiel.de">
+        </div>
+        
+        <div class="input-group">
+            <label for="size">Größe (Pixel):</label>
+            <input type="text" id="size" value="300" placeholder="300">
+        </div>
+        
+        <button class="btn" onclick="generateQR()">QR-Code erstellen</button>
+        
+        <div id="qrcode"></div>
+        <a id="download" class="download-btn" style="display: none;" download="openclaw-qrcode.png">⬇️ Herunterladen</a>
+    </div>
+
+    <script>
+        function setUrl(url) {
+            document.getElementById('url').value = url;
+            generateQR();
+        }
+        
+        function generateQR() {
+            const url = document.getElementById('url').value;
+            const size = parseInt(document.getElementById('size').value) || 300;
+            
+            if (!url) {
+                alert('Bitte URL eingeben!');
+                return;
+            }
+            
+            const qrContainer = document.getElementById('qrcode');
+            const downloadBtn = document.getElementById('download');
+            
+            qrContainer.innerHTML = '';
+            qrContainer.style.display = 'block';
+            
+            QRCode.toCanvas(url, { 
+                width: size,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, function(err, canvas) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                
+                qrContainer.appendChild(canvas);
+                
+                downloadBtn.href = canvas.toDataURL('image/png');
+                downloadBtn.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
