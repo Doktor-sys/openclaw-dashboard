@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -31,8 +32,14 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+// Performance: Compress responses
+app.use(compression());
+
+// Performance: Increase JSON payload limit, optimize parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use(cors());
-app.use(express.json());
 
 // Analytics middleware
 app.use('/api', analyticsController.logApiCall.bind(analyticsController));
